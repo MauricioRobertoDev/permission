@@ -51,15 +51,14 @@ trait HasPermissions
 
     public function getPermissions(): Collection
     {
-        return Permission::getPermissionsOf($this);
+        return app('mr-permission')->getPermissionStorageOf($this);
     }
 
     public function refreshPermissions(): void
     {
-        Permission::refreshPermissionsOf($this);
+        app('mr-permission')->refreshPermissionsOf($this);
     }
 
-    //
     protected function getGuardName(): string
     {
         return GuardHelper::getGuardNameFor(self::class);

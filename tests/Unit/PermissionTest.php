@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use MrDev\Permission\Expections\PermissionDoesNotExistException;
 use MrDev\Permission\Models\Permission;
 
@@ -85,4 +87,43 @@ test('Deve pegar uma permissão do storage e retornar um erro caso não exista',
     expect($permission->guard_name)->toBe('api');
 
     expect(fn () => Permission::getPermissionOrFail(999))->toThrow(PermissionDoesNotExistException::class);
+});
+
+// getAllPermissions(): Collection
+test('Deve retornar todas as permissões', function () {
+    $permission = Permission::create(['key' => 'test-permission']);
+    $permission1 = Permission::create(['key' => 'test-permission-1']);
+    $permission2 = Permission::create(['key' => 'test-permission-2']);
+
+    expect($permission->getAllPermissions())->toBeInstanceOf(Collection::class);
+    expect($permission->getAllPermissions()->count())->toBe(3);
+    expect($permission->getAllPermissions()->contains($permission))->toBeTrue();
+    expect($permission->getAllPermissions()->contains($permission1))->toBeTrue();
+    expect($permission->getAllPermissions()->contains($permission2))->toBeTrue();
+});
+
+// getAllPermissions(): Collection - CACHE
+test('Ao pegar todas as permissões deve criar um cache todas as permissões', function () {
+    $permission = Permission::create(['key' => 'test-permission']);
+
+    expect(Cache::has('permissions::all'))->toBeFalse();
+
+    $permission->getAllPermissions();
+
+    expect(Cache::has('permissions::all'))->toBeTrue();
+});
+
+// refreshPermissions(): void
+test('Deve esquecer o cache de permissões', function () {
+    $permission = Permission::create(['key' => 'test-permission']);
+
+    expect(Cache::has('permissions::all'))->toBeFalse();
+
+    $permission->getAllPermissions();
+
+    expect(Cache::has('permissions::all'))->toBeTrue();
+
+    $permission->refreshPermissions();
+
+    expect(Cache::has('permissions::all'))->toBeFalse();
 });

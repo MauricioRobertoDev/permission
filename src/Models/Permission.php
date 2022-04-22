@@ -116,14 +116,4 @@ class Permission extends Model
     {
         app('mr-permission')->refreshPermissions();
     }
-
-    public static function getPermissionsOf(Model $model)
-    {
-        return app('mr-permission')->getPermissionStorageOf($model);
-    }
-
-    public static function refreshPermissionsOf(Model $model)
-    {
-        return app('mr-permission')->refreshPermissionsOf($model);
-    }
 }
