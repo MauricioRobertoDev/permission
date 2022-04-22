@@ -127,3 +127,16 @@ test('Deve esquecer o cache de permissões', function () {
 
     expect(Cache::has('permissions::all'))->toBeFalse();
 });
+
+// exists(string $key, string $guardName = null): bool
+test('Deve retornar se uma permissão existe ou não', function () {
+    $permission = Permission::create(['key' => 'test-permission']);
+    expect(Permission::exists($permission->key))->toBeTrue();
+
+    $permissionDeleted = Permission::create(['key' => 'test-permission-deleted']);
+    expect(Permission::exists($permissionDeleted->key))->toBeTrue();
+    $permissionDeleted->delete();
+    expect(Permission::exists($permissionDeleted->key))->toBeFalse();
+
+    expect(Permission::exists('does not exist permission'))->toBeFalse();
+});

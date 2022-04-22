@@ -19,7 +19,7 @@ test('Deve retornar se o usuário tem ou não determinada permissão', function 
     expect($user->hasPermission($permission1->id))->toBeTrue();
     expect($user->hasPermission($permission1->key))->toBeTrue();
     expect($user->hasPermission($permission2))->toBeFalse();
-    expect($user->hasPermission('permission-does-not-exist'))->toBeFalse();
+    expect(fn () => $user->hasPermission('permission-does-not-exist'))->toThrow(PermissionDoesNotExistException::class);
 });
 
 // addPermission(string $permission): self

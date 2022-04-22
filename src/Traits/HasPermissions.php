@@ -4,6 +4,7 @@ namespace MrDev\Permission\Traits;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
+use MrDev\Permission\Expections\PermissionDoesNotExistException;
 use MrDev\Permission\Helpers\GuardHelper;
 use MrDev\Permission\Models\Permission;
 
@@ -31,13 +32,13 @@ trait HasPermissions
 
     public function hasPermission(Permission|string|int $permission, $guardName = null): bool
     {
-        $permission = Permission::getPermission($permission, $guardName ?? $this->getGuardName());
+        $concretePermission = Permission::getPermission($permission, $guardName ?? $this->getGuardName());
 
-        if (! $permission) {
-            return false;
+        if (! $concretePermission) {
+            throw PermissionDoesNotExistException::create($permission, $guardName ?? $this->getGuardName());
         }
 
-        return $this->getPermissions()->contains($permission);
+        return $this->getPermissions()->contains($concretePermission);
     }
 
     public function removePermission(Permission|string|int $permission, $guardName = null): void

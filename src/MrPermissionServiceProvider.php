@@ -2,9 +2,13 @@
 
 namespace MrDev\Permission;
 
+use Illuminate\Contracts\Auth\Access\Authorizable;
+
+use Illuminate\Contracts\Auth\Access\Gate;
 use MrDev\Permission\Commands\PermissionCommand;
 use MrDev\Permission\Models\Permission;
 use MrDev\Permission\Observers\PermissionObserver;
+use MrDev\Permission\Traits\HasPermissions;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -12,11 +16,6 @@ class MrPermissionServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        /*
-         * This class is a Package Service Provider
-         *
-         * More info: https://github.com/spatie/laravel-package-tools
-         */
         $package
             ->name('permission')
             ->hasConfigFile()
@@ -32,8 +31,17 @@ class MrPermissionServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
-        //]
         Permission::observe(PermissionObserver::class);
+
+
+        app(Gate::class)->before(function (Authorizable $user, string $ability) {
+            if (Permission::exists($ability) && method_exists($user, 'hasPermission')) {
+                /** @var HasPermissions $user */
+                return $user->hasPermission($ability);
+            }
+
+            return null;
+        });
     }
 
     public function packageBooted()

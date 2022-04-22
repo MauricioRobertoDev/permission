@@ -101,7 +101,7 @@ class Permission extends Model
         }
 
         if (! self::getAllPermissions()->contains($permission)) {
-            throw new PermissionDoesNotExistException('Permission not found');
+            throw PermissionDoesNotExistException::create($permission, $guardName);
         }
 
         return $permission;
@@ -115,5 +115,10 @@ class Permission extends Model
     public static function refreshPermissions(): void
     {
         app('mr-permission')->refreshPermissions();
+    }
+
+    public static function exists(string $key, string $guardName = null): bool
+    {
+        return self::getPermission($key, $guardName) !== null;
     }
 }
