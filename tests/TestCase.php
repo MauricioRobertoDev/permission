@@ -1,10 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Tests;
+namespace MrDev\Permission\Tests;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Schema\Blueprint;
+
+use MrDev\Permission\MrPermissionServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
-use VendorName\Skeleton\SkeletonServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -13,14 +15,14 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'VendorName\\Skeleton\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'MrDev\\Permission\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
     }
 
     protected function getPackageProviders($app)
     {
         return [
-            SkeletonServiceProvider::class,
+            MrPermissionServiceProvider::class,
         ];
     }
 
@@ -28,9 +30,21 @@ class TestCase extends Orchestra
     {
         config()->set('database.default', 'testing');
 
-        /*
-        $migration = include __DIR__.'/../database/migrations/create_skeleton_table.php.stub';
+        $app['db']->connection()->getSchemaBuilder()->create('users', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('email');
+            $table->softDeletes();
+        });
+
+        $app['db']->connection()->getSchemaBuilder()->create('admins', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('email');
+        });
+
+        $migration = include __DIR__ . '/../database/migrations/create_permissions_table.php';
         $migration->up();
-        */
+
+        $migration = include __DIR__ . '/../database/migrations/create_model_has_permissions_table.php';
+        $migration->up();
     }
 }
