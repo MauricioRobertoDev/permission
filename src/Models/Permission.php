@@ -5,6 +5,7 @@ namespace MrDev\Permission\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 use MrDev\Permission\Expections\PermissionAlreadyExists;
 use MrDev\Permission\Expections\PermissionDoesNotExistException;
 use MrDev\Permission\Helpers\GuardHelper;
@@ -46,14 +47,16 @@ class Permission extends Model
             throw PermissionAlreadyExists::withKeyAndGuard($attributes['key'], $attributes['guard_name']);
         }
 
-        return static::query()->create($attributes);
+        $permission = self::query()->create($attributes);
+
+        return $permission;
     }
 
     public static function findById(string $id, string $guardName = null): Permission
     {
         $guardName = $guardName ?? GuardHelper::getGuardNameFor(static::class);
 
-        $concretePermission = app('mr-permission')->getPermissions()->where('id', $id)->where('guard_name', $guardName)->first();
+        $concretePermission = app('mr-permission')->getPermissionStorage()->where('id', $id)->where('guard_name', $guardName)->first();
 
         if (! $concretePermission) {
             throw PermissionDoesNotExistException::withIdAndGuard($id, $guardName);
@@ -66,7 +69,9 @@ class Permission extends Model
     {
         $guardName = $guardName ?? GuardHelper::getGuardNameFor(static::class);
 
-        $concretePermission = app('mr-permission')->getPermissions()->where('key', $key)->where('guard_name', $guardName)->first();
+        $concretePermission = app('mr-permission')->getPermissionStorage()->where('key', $key)->where('guard_name', $guardName)->first();
+
+        // dump(app('mr-permission')->getPermissionStorage());
 
         if (! $concretePermission) {
             throw PermissionDoesNotExistException::withKeyAndGuard($key, $guardName);
@@ -87,6 +92,38 @@ class Permission extends Model
 
     public static function getPermissionOrFail(Permission|string|int $permission, string $guardName = null): Permission
     {
-        return app('mr-permission')->getPermission($permission, $guardName ?? GuardHelper::getGuardNameFor(self::class));
+        if (is_string($permission)) {
+            return $permission = self::findByKey($permission, $guardName);
+        }
+
+        if (is_int($permission)) {
+            return $permission = self::findById($permission, $guardName);
+        }
+
+        if (! self::getAllPermissions()->contains($permission)) {
+            throw new PermissionDoesNotExistException('Permission not found');
+        }
+
+        return $permission;
+    }
+
+    public static function getAllPermissions(): Collection
+    {
+        return app('mr-permission')->getPermissionStorage();
+    }
+
+    public static function refreshPermissions(): void
+    {
+        app('mr-permission')->refreshPermissions();
+    }
+
+    public static function getPermissionsOf(Model $model)
+    {
+        return app('mr-permission')->getPermissionStorageOf($model);
+    }
+
+    public static function refreshPermissionsOf(Model $model)
+    {
+        return app('mr-permission')->refreshPermissionsOf($model);
     }
 }

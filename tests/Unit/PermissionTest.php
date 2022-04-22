@@ -5,12 +5,10 @@ use MrDev\Permission\Models\Permission;
 
 // create(array $attributes = []): self
 test('Deve criar uma permissão e adicionar automaticamente o guard padrão', function () {
-    config()->set('auth.defaults.guard', 'web');
-
     $permission1 = Permission::create(['key' => 'test-permission']);
     $permission2 = Permission::create(['key' => 'test-permission', 'guard_name' => 'test']);
 
-    expect($permission1->guard_name)->toBe('web');
+    expect($permission1->guard_name)->toBe('default');
     expect($permission2->guard_name)->toBe('test');
 });
 
@@ -48,8 +46,6 @@ test('Deve retornar um erro ao tentar recuperar pela key uma permissão que não
 
 // getPermission(Permission|string|int $permission, string $guard): Permission|null
 test('Deve pegar uma permissão do storage e retornar null caso não exista', function () {
-    config()->set('auth.defaults.guard', 'default');
-
     $permission = Permission::create(['key' => 'test-permission']);
     $permissionWeb = Permission::create(['key' => 'test-permission-x', 'guard_name' => 'web']);
     $permissionApi = Permission::create(['key' => 'test-permission-x', 'guard_name' => 'api']);
@@ -72,8 +68,6 @@ test('Deve pegar uma permissão do storage e retornar null caso não exista', fu
 
 // getPermissionOrFail(Permission|string|int $permission, string $guardName = null): Permission
 test('Deve pegar uma permissão do storage e retornar um erro caso não exista', function () {
-    config()->set('auth.defaults.guard', 'default');
-
     $permission = Permission::create(['key' => 'test-permission']);
     $permissionWeb = Permission::create(['key' => 'test-permission-x', 'guard_name' => 'web']);
     $permissionApi = Permission::create(['key' => 'test-permission-x', 'guard_name' => 'api']);

@@ -1,13 +1,12 @@
 <?php
 
+use Illuminate\Support\Facades\Cache;
 use MrDev\Permission\Expections\PermissionDoesNotExistException;
 use MrDev\Permission\Models\Permission;
 use MrDev\Permission\Tests\User;
 
 // hasPermission(string $permission): bool
 test('Deve retornar se o usuário tem ou não determinada permissão', function () {
-    config()->set('auth.defaults.guard', 'web');
-
     $user = User::query()->create(['email' => 'user@test.com']);
     $permission1 = Permission::create(['key' => 'test-permission-1']);
     $permission2 = Permission::create(['key' => 'test-permission-2']);
@@ -25,8 +24,6 @@ test('Deve retornar se o usuário tem ou não determinada permissão', function 
 
 // addPermission(string $permission): self
 test('Deve adicionar uma permissão para um usuário', function () {
-    config()->set('auth.defaults.guard', 'web');
-
     $user = User::query()->create(['email' => 'user@test.com']);
     $permission1 = Permission::create(['key' => 'test-permission-1']);
     $permission2 = Permission::create(['key' => 'test-permission-2']);
@@ -47,8 +44,6 @@ test('Deve adicionar uma permissão para um usuário', function () {
 
 // addPermission(string $permission): self - ERROR
 test('Deve retornar um erro ao tentar adicionar um permissão que não existe para um usuário', function () {
-    config()->set('auth.defaults.guard', 'web');
-
     $user = User::query()->create(['email' => 'user@test.com']);
 
     expect(fn () => $user->addPermission('permission-does-not-exist'))->toThrow(PermissionDoesNotExistException::class);
@@ -56,8 +51,6 @@ test('Deve retornar um erro ao tentar adicionar um permissão que não existe pa
 
 // removePermission(Permission|string|int $permission, $guardName = null): void
 test('Deve remover uma permissão de um usuário', function () {
-    config()->set('auth.defaults.guard', 'web');
-
     $user = User::query()->create(['email' => 'user@test.com']);
     $permission = Permission::create(['key' => 'test-permission']);
 
@@ -68,4 +61,46 @@ test('Deve remover uma permissão de um usuário', function () {
     $user->removePermission($permission);
 
     expect($user->hasPermission($permission))->toBeFalse();
+});
+
+
+//  getPermissions(): Collection
+test('Deve recuperar a lista de permissões do model no storage', function () {
+    $permission = Permission::create(['key' => 'test-permission']);
+    $user = User::create(['email' => 'user@test.com']);
+
+    expect($user->getPermissions()->count())->toBe(0);
+
+    $user->addPermission($permission);
+
+    expect($user->getPermissions()->count())->toBe(1);
+    expect($user->getPermissions()->contains($permission))->toBeTrue();
+});
+
+// getPermissions(): Collection - CACHE
+test('Ao pegar as permissões deve criar um cache com as permissões', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $key = 'permissions::of::' . $user::class . '::' . $user->getKey();
+
+    expect(Cache::has($key))->toBeFalse();
+
+    $user->getPermissions();
+
+    expect(Cache::has($key))->toBeTrue();
+});
+
+// refreshPermissions(): void
+test('Deve esquecer o cache com as permissões do model', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $key = 'permissions::of::' . $user::class . '::' . $user->getKey();
+
+    expect(Cache::has($key))->toBeFalse();
+
+    $user->getPermissions();
+
+    expect(Cache::has($key))->toBeTrue();
+
+    $user->refreshPermissions();
+
+    expect(Cache::has($key))->toBeFalse();
 });

@@ -4,7 +4,6 @@ namespace MrDev\Permission\Tests;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Schema\Blueprint;
-
 use MrDev\Permission\MrPermissionServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -30,13 +29,20 @@ class TestCase extends Orchestra
     {
         config()->set('database.default', 'testing');
 
-        $app['db']->connection()->getSchemaBuilder()->create('users', function (Blueprint $table) {
+        config()->set('auth.defaults.guard', 'default');
+        config()->set('auth.guards.default', ['driver' => 'session', 'provider' => 'users']);
+        config()->set('auth.guards.api', ['driver' => 'session', 'provider' => 'users']);
+        config()->set('auth.guards.admin', ['driver' => 'session', 'provider' => 'admins']);
+        config()->set('auth.providers.users', ['driver' => 'eloquent', 'model' => User::class]);
+        config()->set('auth.providers.admins', ['driver' => 'eloquent', 'model' => Admin::class]);
+
+        app('db')->connection()->getSchemaBuilder()->create('users', function (Blueprint $table) {
             $table->increments('id');
             $table->string('email');
             $table->softDeletes();
         });
 
-        $app['db']->connection()->getSchemaBuilder()->create('admins', function (Blueprint $table) {
+        app('db')->connection()->getSchemaBuilder()->create('admins', function (Blueprint $table) {
             $table->increments('id');
             $table->string('email');
         });

@@ -2,31 +2,60 @@
 
 namespace MrDev\Permission;
 
-use Illuminate\Database\Eloquent\Collection;
-use MrDev\Permission\Expections\PermissionDoesNotExistException;
+// use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use MrDev\Permission\Models\Permission;
+use MrDev\Permission\Traits\HasPermissions;
 
 class MrPermission
 {
-    public function getPermissions(): Collection
+    public function getPermissionStorage(): Collection
     {
-        return Permission::all();
+        $key = 'permissions::all';
+
+        if (Cache::has($key)) {
+            return Cache::get($key);
+        }
+
+        $permissions = Permission::all();
+
+        Cache::forever($key, $permissions);
+
+        return $permissions;
     }
 
-    public function getPermission(Permission|string|int $permission, string $guardName): Permission
+    public function refreshPermissions()
     {
-        if (is_string($permission)) {
-            return $permission = Permission::findByKey($permission, $guardName);
+        $key = 'permissions::all';
+
+        Cache::forget($key);
+    }
+
+    public function getPermissionStorageOf(Model $model): Collection
+    {
+        $key = 'permissions::of::' . $model::class . '::' . $model->getKey();
+
+        if (Cache::has($key)) {
+            return Cache::get($key);
         }
 
-        if (is_int($permission)) {
-            return $permission = Permission::findById($permission, $guardName);
+        if (in_array(HasPermissions::class, class_uses_recursive($model))) {
+            $permissions = $model->permissions()->get();
+
+            Cache::forever($key, $permissions);
+
+            return $permissions;
         }
 
-        if (! $this->getPermissions()->contains($permission)) {
-            throw new PermissionDoesNotExistException('Permission not found');
-        }
+        return collect([]);
+    }
 
-        return $permission;
+    public function refreshPermissionsOf(Model $model): void
+    {
+        $key = 'permissions::of::' . $model::class . '::' . $model->getKey();
+
+        Cache::forget($key);
     }
 }

@@ -3,6 +3,7 @@
 namespace MrDev\Permission\Traits;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 use MrDev\Permission\Helpers\GuardHelper;
 use MrDev\Permission\Models\Permission;
 
@@ -24,6 +25,8 @@ trait HasPermissions
         $permission = Permission::getPermissionOrFail($permission, $guardName ?? $this->getGuardName());
 
         $this->permissions()->attach($permission);
+
+        $this->refreshPermissions();
     }
 
     public function hasPermission(Permission|string|int $permission, $guardName = null): bool
@@ -34,7 +37,7 @@ trait HasPermissions
             return false;
         }
 
-        return $this->permissions()->get()->contains($permission);
+        return $this->getPermissions()->contains($permission);
     }
 
     public function removePermission(Permission|string|int $permission, $guardName = null): void
@@ -42,8 +45,21 @@ trait HasPermissions
         $permission = Permission::getPermission($permission, $guardName ?? $this->getGuardName());
 
         $this->permissions()->detach($permission);
+
+        $this->refreshPermissions();
     }
 
+    public function getPermissions(): Collection
+    {
+        return Permission::getPermissionsOf($this);
+    }
+
+    public function refreshPermissions(): void
+    {
+        Permission::refreshPermissionsOf($this);
+    }
+
+    //
     protected function getGuardName(): string
     {
         return GuardHelper::getGuardNameFor(self::class);
