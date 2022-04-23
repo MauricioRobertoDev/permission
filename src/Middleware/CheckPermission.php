@@ -3,21 +3,39 @@
 namespace MrDev\Permission\Middleware;
 
 use Closure;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use MrDev\Permission\Expections\UnauthorizedException;
+use MrDev\Permission\Models\Permission;
 
 class CheckPermission
 {
-    public function handle(Request $request, Closure $next, string $permission)
+    public function handle($request, Closure $next, $permissions, string $guard = null)
     {
-        $permissions = explode('|', $permission);
+        $authGuard = app('auth')->guard($guard);
 
-        foreach ($permissions as $permission) {
-            if ($request->user()->can($permission)) {
-                return $next($request);
-            }
+        // $guard = $authGuard->getDefaultDriver();
+
+        if ($authGuard->guest()) {
+            throw UnauthorizedException::notLoggedIn();
         }
 
-        abort(Response::HTTP_FORBIDDEN);
+        $denied_permissions = [];
+
+        $permissions = is_array($permissions)
+            ? $permissions
+            : explode('|', $permissions);
+
+        foreach ($permissions as $permission) {
+            if (config('app.debug')) {
+                Permission::getPermissionOrFail($permission);
+            }
+
+            if ($authGuard->user()->can($permission)) {
+                return $next($request);
+            }
+
+            $denied_permissions[] = $permission;
+        }
+
+        throw UnauthorizedException::forPermissions($denied_permissions);
     }
 }

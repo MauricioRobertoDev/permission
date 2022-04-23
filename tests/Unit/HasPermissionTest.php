@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Cache;
+use MrDev\Permission\Expections\GuardDoesNotExists;
+use MrDev\Permission\Expections\GuardDoesNotMatch;
 use MrDev\Permission\Expections\PermissionDoesNotExistException;
 use MrDev\Permission\Models\Permission;
 use MrDev\Permission\Tests\User;
@@ -49,6 +51,30 @@ test('Deve retornar um erro ao tentar adicionar um permissão que não existe pa
     expect(fn () => $user->addPermission('permission-does-not-exist'))->toThrow(PermissionDoesNotExistException::class);
 });
 
+// addPermission(string $permission): self - ERROR
+test('Deve retornar um erro ao tentar aidicionar uma permissão que tem um guard que não existe', function () {
+    $p = Permission::query()->create(['key' => 'test-permission', 'guard_name' => 'guard-does-not-exists']);
+    $user = User::create(['email' => 'user@test.com']);
+
+    expect(fn () => $user->addPermission($p))->toThrow(GuardDoesNotExists::class);
+});
+
+// addPermission(string $permission): self - ERROR
+test('Deve retornar um erro ao tentar adicionar um permissão com um guard que não cobre o model/user', function () {
+    $p1 = Permission::create(['key' => 'test-permission']); // default
+    $p2 = Permission::create(['key' => 'test-permission', 'guard_name' => 'web']);
+    $p3 = Permission::create(['key' => 'test-permission', 'guard_name' => 'admin']);
+    $p4 = Permission::query()->create(['key' => 'test-permission-XXXXX', 'guard_name' => 'guard-does-not-exists']);
+
+    $user = User::query()->create(['email' => 'user@test.com']);
+
+    $user->addPermission($p1);
+    $user->addPermission($p2);
+
+    expect(fn () => $user->addPermission($p3))->toThrow(GuardDoesNotMatch::class);
+    expect(fn () => $user->addPermission($p4))->toThrow(GuardDoesNotExists::class);
+});
+
 // removePermission(Permission|string|int $permission, $guardName = null): void
 test('Deve remover uma permissão de um usuário', function () {
     $user = User::query()->create(['email' => 'user@test.com']);
@@ -62,7 +88,6 @@ test('Deve remover uma permissão de um usuário', function () {
 
     expect($user->hasPermission($permission))->toBeFalse();
 });
-
 
 //  getPermissions(): Collection
 test('Deve recuperar a lista de permissões do model no storage', function () {

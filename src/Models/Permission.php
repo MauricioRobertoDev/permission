@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
+use MrDev\Permission\Expections\GuardDoesNotExists;
 use MrDev\Permission\Expections\PermissionAlreadyExists;
 use MrDev\Permission\Expections\PermissionDoesNotExistException;
 use MrDev\Permission\Helpers\GuardHelper;
@@ -41,6 +42,10 @@ class Permission extends Model
     {
         $attributes['guard_name'] = $attributes['guard_name'] ?? GuardHelper::getGuardNameFor(static::class);
 
+        if (! GuardHelper::guardExists($attributes['guard_name'])) {
+            throw GuardDoesNotExists::guard($attributes['guard_name']);
+        }
+
         $permission = static::getPermission($attributes['key'], $attributes['guard_name']);
 
         if ($permission) {
@@ -54,7 +59,7 @@ class Permission extends Model
 
     public static function findById(string $id, string $guardName = null): Permission
     {
-        $guardName = $guardName ?? GuardHelper::getGuardNameFor(static::class);
+        $guardName = $guardName ?? config('auth.defaults.guard');
 
         $concretePermission = app('mr-permission')->getPermissionStorage()->where('id', $id)->where('guard_name', $guardName)->first();
 
@@ -67,11 +72,9 @@ class Permission extends Model
 
     public static function findByKey(string $key, string $guardName = null): Permission
     {
-        $guardName = $guardName ?? GuardHelper::getGuardNameFor(static::class);
+        $guardName = $guardName ?? config('auth.defaults.guard');
 
         $concretePermission = app('mr-permission')->getPermissionStorage()->where('key', $key)->where('guard_name', $guardName)->first();
-
-        // dump(app('mr-permission')->getPermissionStorage());
 
         if (! $concretePermission) {
             throw PermissionDoesNotExistException::withKeyAndGuard($key, $guardName);
@@ -93,16 +96,19 @@ class Permission extends Model
     public static function getPermissionOrFail(Permission|string|int $permission, string $guardName = null): Permission
     {
         if (is_string($permission)) {
-            return $permission = self::findByKey($permission, $guardName);
+            return self::findByKey($permission, $guardName);
         }
 
         if (is_int($permission)) {
-            return $permission = self::findById($permission, $guardName);
+            return self::findById($permission, $guardName);
         }
 
         if (! self::getAllPermissions()->contains($permission)) {
             throw PermissionDoesNotExistException::create($permission, $guardName);
         }
+
+        // $permission = self::findByKey($permission->key, $guardName);
+        $permission = self::findByKey($permission->key, $permission->guard_name);
 
         return $permission;
     }

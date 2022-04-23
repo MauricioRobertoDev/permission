@@ -33,7 +33,7 @@ class GuardHelper
 
     protected static function getPossibleGuardsByAuthConfig(string $class): Collection
     {
-        return collect(config('auth.guards'))
+        return collect(config()->get('auth.guards'))
             ->map(function ($guard) {
                 if (! isset($guard['provider'])) {
                     return null;
@@ -49,7 +49,7 @@ class GuardHelper
 
     public static function getGuardNameFor(Model|string $model): string
     {
-        $default = config('auth.defaults.guard');
+        $default = config()->get('auth.defaults.guard');
 
         $possible_guards = self::getPossibleGuards($model);
 
@@ -71,5 +71,10 @@ class GuardHelper
                 return config("auth.providers.{$guard['provider']}.model");
             })
             ->get($guard);
+    }
+
+    public static function guardExists(string $guardName): bool
+    {
+        return collect(config('auth.guards'))->keys()->contains($guardName);
     }
 }

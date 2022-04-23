@@ -4,6 +4,8 @@ namespace MrDev\Permission\Traits;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
+use MrDev\Permission\Expections\GuardDoesNotExists;
+use MrDev\Permission\Expections\GuardDoesNotMatch;
 use MrDev\Permission\Expections\PermissionDoesNotExistException;
 use MrDev\Permission\Helpers\GuardHelper;
 use MrDev\Permission\Models\Permission;
@@ -21,21 +23,27 @@ trait HasPermissions
         );
     }
 
-    public function addPermission(Permission|string|int $permission): void
+    public function addPermission(Permission|string|int $permission, string $guardName = null): void
     {
-        $permission = Permission::getPermissionOrFail($permission, $guardName ?? $this->getGuardName());
+        $guardName = $guardName ?? $this->getGuardName();
 
-        $this->permissions()->attach($permission);
+        $concretePermission = Permission::getPermissionOrFail($permission, $guardName);
+
+        $this->ensureModelSharesGuard($concretePermission);
+
+        $this->permissions()->attach($concretePermission);
 
         $this->refreshPermissions();
     }
 
     public function hasPermission(Permission|string|int $permission, $guardName = null): bool
     {
-        $concretePermission = Permission::getPermission($permission, $guardName ?? $this->getGuardName());
+        $guardName = $guardName ?? $this->getGuardName();
+
+        $concretePermission = Permission::getPermission($permission, $guardName);
 
         if (! $concretePermission) {
-            throw PermissionDoesNotExistException::create($permission, $guardName ?? $this->getGuardName());
+            throw PermissionDoesNotExistException::create($permission, $guardName);
         }
 
         return $this->getPermissions()->contains($concretePermission);
@@ -62,6 +70,22 @@ trait HasPermissions
 
     protected function getGuardName(): string
     {
-        return GuardHelper::getGuardNameFor(self::class);
+        return GuardHelper::getGuardNameFor($this);
+    }
+
+    protected function getPossibleGuards(): Collection
+    {
+        return GuardHelper::getPossibleGuards($this);
+    }
+
+    protected function ensureModelSharesGuard($groupOrPermission): void
+    {
+        if (! GuardHelper::guardExists($groupOrPermission->guard_name)) {
+            throw GuardDoesNotExists::guardOfPermissionOrRole($groupOrPermission);
+        }
+
+        if (! $this->getPossibleGuards()->contains($groupOrPermission->guard_name)) {
+            throw GuardDoesNotMatch::create($groupOrPermission->guard_name, $this->getPossibleGuards());
+        }
     }
 }

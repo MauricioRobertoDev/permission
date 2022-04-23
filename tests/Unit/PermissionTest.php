@@ -2,16 +2,22 @@
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use MrDev\Permission\Expections\GuardDoesNotExists;
 use MrDev\Permission\Expections\PermissionDoesNotExistException;
 use MrDev\Permission\Models\Permission;
 
 // create(array $attributes = []): self
 test('Deve criar uma permissão e adicionar automaticamente o guard padrão', function () {
     $permission1 = Permission::create(['key' => 'test-permission']);
-    $permission2 = Permission::create(['key' => 'test-permission', 'guard_name' => 'test']);
+    $permission2 = Permission::create(['key' => 'test-permission', 'guard_name' => 'api']);
 
     expect($permission1->guard_name)->toBe('default');
-    expect($permission2->guard_name)->toBe('test');
+    expect($permission2->guard_name)->toBe('api');
+});
+
+// create(array $attributes = []): self - ERROR
+test('Deve retornar um erro criar uma permissão com um guard que não existe', function () {
+    expect(fn () => Permission::create(['key' => 'test-permission', 'guard_name' => 'guard-does-not-exists']))->toThrow(GuardDoesNotExists::class);
 });
 
 // findById(string $id, string $guardName = null): Permission
@@ -56,11 +62,11 @@ test('Deve pegar uma permissão do storage e retornar null caso não exista', fu
     expect($permission->key)->toBe('test-permission');
     expect($permission->guard_name)->toBe('default');
 
-    $permission = Permission::getPermission($permissionWeb);
+    $permission = Permission::getPermission($permissionWeb, 'web');
     expect($permission->key)->toBe('test-permission-x');
     expect($permission->guard_name)->toBe('web');
 
-    $permission = Permission::getPermission($permissionApi);
+    $permission = Permission::getPermission($permissionApi, 'api');
     expect($permission->key)->toBe('test-permission-x');
     expect($permission->guard_name)->toBe('api');
 
@@ -78,11 +84,11 @@ test('Deve pegar uma permissão do storage e retornar um erro caso não exista',
     expect($permission->key)->toBe('test-permission');
     expect($permission->guard_name)->toBe('default');
 
-    $permission = Permission::getPermissionOrFail($permissionWeb);
+    $permission = Permission::getPermissionOrFail($permissionWeb, 'web');
     expect($permission->key)->toBe('test-permission-x');
     expect($permission->guard_name)->toBe('web');
 
-    $permission = Permission::getPermissionOrFail($permissionApi);
+    $permission = Permission::getPermissionOrFail($permissionApi, 'api');
     expect($permission->key)->toBe('test-permission-x');
     expect($permission->guard_name)->toBe('api');
 

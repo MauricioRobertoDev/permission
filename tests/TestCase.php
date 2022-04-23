@@ -28,8 +28,10 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+        config()->set('app.debug', true);
 
         config()->set('auth.defaults.guard', 'default');
+        config()->set('auth.guards.web', ['driver' => 'session', 'provider' => 'users']);
         config()->set('auth.guards.default', ['driver' => 'session', 'provider' => 'users']);
         config()->set('auth.guards.api', ['driver' => 'session', 'provider' => 'users']);
         config()->set('auth.guards.admin', ['driver' => 'session', 'provider' => 'admins']);
