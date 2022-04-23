@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use MrDev\Permission\Models\Permission;
+use MrDev\Permission\Models\Role;
 use MrDev\Permission\Traits\HasPermissions;
 
 class MrPermission
 {
     public function getPermissionStorage(): Collection
     {
-        $key = 'permissions::all';
+        $key = 'mrdev::cache::permissions::all';
 
         if (Cache::has($key)) {
             return Cache::get($key);
@@ -26,9 +27,9 @@ class MrPermission
         return $permissions;
     }
 
-    public function refreshPermissions()
+    public function refreshPermissionStorage()
     {
-        $key = 'permissions::all';
+        $key = 'mrdev::cache::permissions::all';
 
         Cache::forget($key);
     }
@@ -55,6 +56,30 @@ class MrPermission
     public function refreshPermissionsOf(Model $model): void
     {
         $key = 'permissions::of::' . $model::class . '::' . $model->getKey();
+
+        Cache::forget($key);
+    }
+
+    // ROLE
+
+    public function getRoleStorage(): Collection
+    {
+        $key = 'mrdev::cache::roles::all';
+
+        if (Cache::has($key)) {
+            return Cache::get($key);
+        }
+
+        $roles = Role::all();
+
+        Cache::forever($key, $roles);
+
+        return $roles;
+    }
+
+    public function refreshRoleStorage(): void
+    {
+        $key = 'mrdev::cache::roles::all';
 
         Cache::forget($key);
     }

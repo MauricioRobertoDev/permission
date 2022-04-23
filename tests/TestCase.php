@@ -54,5 +54,11 @@ class TestCase extends Orchestra
 
         $migration = include __DIR__ . '/../database/migrations/create_model_has_permissions_table.php';
         $migration->up();
+
+        $migration = include __DIR__ . '/../database/migrations/create_roles_table.php';
+        $migration->up();
+
+        $migration = include __DIR__ . '/../database/migrations/create_role_has_permissions_table.php';
+        $migration->up();
     }
 }

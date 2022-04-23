@@ -110,28 +110,30 @@ test('Deve retornar todas as permissões', function () {
 
 // getAllPermissions(): Collection - CACHE
 test('Ao pegar todas as permissões deve criar um cache todas as permissões', function () {
+    $key = 'mrdev::cache::permissions::all';
+
     $permission = Permission::create(['key' => 'test-permission']);
 
-    expect(Cache::has('permissions::all'))->toBeFalse();
+    expect(Cache::has($key))->toBeFalse();
 
     $permission->getAllPermissions();
 
-    expect(Cache::has('permissions::all'))->toBeTrue();
+    expect(Cache::has($key))->toBeTrue();
 });
 
-// refreshPermissions(): void
+// refreshStorage(): void
 test('Deve esquecer o cache de permissões', function () {
-    $permission = Permission::create(['key' => 'test-permission']);
+    $key = 'mrdev::cache::permissions::all';
 
-    expect(Cache::has('permissions::all'))->toBeFalse();
+    expect(Cache::has($key))->toBeFalse();
 
-    $permission->getAllPermissions();
+    Permission::getAllPermissions();
 
-    expect(Cache::has('permissions::all'))->toBeTrue();
+    expect(Cache::has($key))->toBeTrue();
 
-    $permission->refreshPermissions();
+    Permission::refreshStorage();
 
-    expect(Cache::has('permissions::all'))->toBeFalse();
+    expect(Cache::has($key))->toBeFalse();
 });
 
 // exists(string $key, string $guardName = null): bool

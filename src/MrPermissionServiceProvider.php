@@ -8,7 +8,9 @@ use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Routing\Router;
 use MrDev\Permission\Commands\PermissionCommand;
 use MrDev\Permission\Models\Permission;
+use MrDev\Permission\Models\Role;
 use MrDev\Permission\Observers\PermissionObserver;
+use MrDev\Permission\Observers\RoleObserver;
 use MrDev\Permission\Traits\HasPermissions;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -33,7 +35,7 @@ class MrPermissionServiceProvider extends PackageServiceProvider
     public function bootingPackage()
     {
         Permission::observe(PermissionObserver::class);
-
+        Role::observe(RoleObserver::class);
 
         app(Gate::class)->before(function (Authorizable $user, string $ability) {
             if (Permission::exists($ability) && method_exists($user, 'hasPermission')) {

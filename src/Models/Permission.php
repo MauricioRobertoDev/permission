@@ -57,30 +57,9 @@ class Permission extends Model
         return $permission;
     }
 
-    public static function findById(string $id, string $guardName = null): Permission
+    public static function getAllPermissions(): Collection
     {
-        $guardName = $guardName ?? config('auth.defaults.guard');
-
-        $concretePermission = app('mr-permission')->getPermissionStorage()->where('id', $id)->where('guard_name', $guardName)->first();
-
-        if (! $concretePermission) {
-            throw PermissionDoesNotExistException::withIdAndGuard($id, $guardName);
-        }
-
-        return $concretePermission;
-    }
-
-    public static function findByKey(string $key, string $guardName = null): Permission
-    {
-        $guardName = $guardName ?? config('auth.defaults.guard');
-
-        $concretePermission = app('mr-permission')->getPermissionStorage()->where('key', $key)->where('guard_name', $guardName)->first();
-
-        if (! $concretePermission) {
-            throw PermissionDoesNotExistException::withKeyAndGuard($key, $guardName);
-        }
-
-        return $concretePermission;
+        return self::storage();
     }
 
     public static function getPermission(Permission|string|int $permission, string $guardName = null): Permission|null
@@ -113,18 +92,46 @@ class Permission extends Model
         return $permission;
     }
 
-    public static function getAllPermissions(): Collection
+    public static function findById(string $id, string $guardName = null): Permission
     {
-        return app('mr-permission')->getPermissionStorage();
+        $guardName = $guardName ?? config('auth.defaults.guard');
+
+        /** @var Permission $concretePermission */
+        $concretePermission = self::storage()->where('id', $id)->where('guard_name', $guardName)->first();
+
+        if (! $concretePermission) {
+            throw PermissionDoesNotExistException::withIdAndGuard($id, $guardName);
+        }
+
+        return $concretePermission;
     }
 
-    public static function refreshPermissions(): void
+    public static function findByKey(string $key, string $guardName = null): Permission
     {
-        app('mr-permission')->refreshPermissions();
+        $guardName = $guardName ?? config('auth.defaults.guard');
+
+        /** @var Permission $concretePermission */
+        $concretePermission = self::storage()->where('key', $key)->where('guard_name', $guardName)->first();
+
+        if (! $concretePermission) {
+            throw PermissionDoesNotExistException::withKeyAndGuard($key, $guardName);
+        }
+
+        return $concretePermission;
     }
 
     public static function exists(string $key, string $guardName = null): bool
     {
         return self::getPermission($key, $guardName) !== null;
+    }
+
+    public static function refreshStorage(): void
+    {
+        app('mr-permission')->refreshPermissionStorage();
+    }
+
+    protected static function storage(): Collection
+    {
+        return app('mr-permission')->getPermissionStorage();
     }
 }

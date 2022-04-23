@@ -8,16 +8,16 @@ class PermissionObserver
 {
     public function updated(Permission $permission)
     {
-        $permission->refreshPermissions();
+        $permission->refreshStorage();
     }
 
     public function saved(Permission $permission)
     {
-        $permission->refreshPermissions();
+        $permission->refreshStorage();
     }
 
     public function deleted(Permission $permission)
     {
-        $permission->refreshPermissions();
+        $permission->refreshStorage();
     }
 }

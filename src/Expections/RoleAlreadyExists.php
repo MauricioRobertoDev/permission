@@ -4,10 +4,10 @@ namespace MrDev\Permission\Expections;
 
 use Exception;
 
-class PermissionAlreadyExists extends Exception
+class RoleAlreadyExists extends Exception
 {
     public static function withKeyAndGuard($key, $guardName)
     {
-        return new static("Permission `{$key}` already exists for guard `{$guardName}`.");
+        return new static("Role `{$key}` already exists for guard `{$guardName}`.");
     }
 }
