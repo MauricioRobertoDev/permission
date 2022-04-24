@@ -77,7 +77,7 @@ $user->addRole('role');
 // OU
 $user->addRole($role->id);
 
-Todos os Contribuintes
+
 // CHECANDO
 
 $user->hasRole('role');
