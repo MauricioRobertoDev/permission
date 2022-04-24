@@ -1,10 +1,11 @@
 <?php
 
-namespace VendorName\Skeleton\Tests;
+namespace MrDev\Permission\Tests;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Schema\Blueprint;
+use MrDev\Permission\MrPermissionServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
-use VendorName\Skeleton\SkeletonServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -13,24 +14,51 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'VendorName\\Skeleton\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'MrDev\\Permission\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
     }
 
     protected function getPackageProviders($app)
     {
         return [
-            SkeletonServiceProvider::class,
+            MrPermissionServiceProvider::class,
         ];
     }
 
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+        config()->set('app.debug', true);
 
-        /*
-        $migration = include __DIR__.'/../database/migrations/create_skeleton_table.php.stub';
+        config()->set('auth.defaults.guard', 'default');
+        config()->set('auth.guards.web', ['driver' => 'session', 'provider' => 'users']);
+        config()->set('auth.guards.default', ['driver' => 'session', 'provider' => 'users']);
+        config()->set('auth.guards.api', ['driver' => 'session', 'provider' => 'users']);
+        config()->set('auth.guards.admin', ['driver' => 'session', 'provider' => 'admins']);
+        config()->set('auth.providers.users', ['driver' => 'eloquent', 'model' => User::class]);
+        config()->set('auth.providers.admins', ['driver' => 'eloquent', 'model' => Admin::class]);
+
+        app('db')->connection()->getSchemaBuilder()->create('users', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('email');
+            $table->softDeletes();
+        });
+
+        app('db')->connection()->getSchemaBuilder()->create('admins', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('email');
+        });
+
+        $migration = include __DIR__ . '/../database/migrations/create_permissions_table.php';
         $migration->up();
-        */
+
+        $migration = include __DIR__ . '/../database/migrations/create_model_has_permissions_table.php';
+        $migration->up();
+
+        $migration = include __DIR__ . '/../database/migrations/create_roles_table.php';
+        $migration->up();
+
+        $migration = include __DIR__ . '/../database/migrations/create_model_has_roles_table.php';
+        $migration->up();
     }
 }
