@@ -12,8 +12,6 @@ class CheckPermission
     {
         $authGuard = app('auth')->guard($guard);
 
-        // $guard = $authGuard->getDefaultDriver();
-
         if ($authGuard->guest()) {
             throw UnauthorizedException::notLoggedIn();
         }

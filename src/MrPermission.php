@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Cache;
 use MrDev\Permission\Models\Permission;
 use MrDev\Permission\Models\Role;
 use MrDev\Permission\Traits\HasPermissions;
+use MrDev\Permission\Traits\HasRoles;
 
 class MrPermission
 {
+    // PERMISSIONS
     public function getPermissionStorage(): Collection
     {
         $key = 'mrdev::cache::permissions::all';
@@ -34,6 +36,7 @@ class MrPermission
         Cache::forget($key);
     }
 
+    // USER - PERMISSIONS
     public function getPermissionStorageOf(Model $model): Collection
     {
         $key = 'permissions::of::' . $model::class . '::' . $model->getKey();
@@ -61,7 +64,6 @@ class MrPermission
     }
 
     // ROLE
-
     public function getRoleStorage(): Collection
     {
         $key = 'mrdev::cache::roles::all';
@@ -80,6 +82,33 @@ class MrPermission
     public function refreshRoleStorage(): void
     {
         $key = 'mrdev::cache::roles::all';
+
+        Cache::forget($key);
+    }
+
+    // USER - ROLES
+    public function getRoleStorageOf(Model $model): Collection
+    {
+        $key = 'roles::of::' . $model::class . '::' . $model->getKey();
+
+        if (Cache::has($key)) {
+            return Cache::get($key);
+        }
+
+        if (in_array(HasRoles::class, class_uses_recursive($model))) {
+            $roles = $model->roles()->get();
+
+            Cache::forever($key, $roles);
+
+            return $roles;
+        }
+
+        return collect([]);
+    }
+
+    public function refreshRoleStorageOf(Model $model): void
+    {
+        $key = 'roles::of::' . $model::class . '::' . $model->getKey();
 
         Cache::forget($key);
     }
