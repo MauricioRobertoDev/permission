@@ -79,13 +79,11 @@ class Role extends Model
             return self::findById($role, $guardName);
         }
 
-        if (! self::getAllroles()->contains($role)) {
-            throw RoleDoesNotExistException::create($role, $guardName);
+        if (self::getAllroles()->contains($role)) {
+            return self::findByKey($role->key, $role->guard_name);
         }
 
-        $role = self::findByKey($role->key, $role->guard_name);
-
-        return $role;
+        throw RoleDoesNotExistException::create($role, $guardName);
     }
 
     public static function findById(string $id, string $guardName = null): Role
@@ -95,11 +93,11 @@ class Role extends Model
         /** @var Role $concreteRole */
         $concreteRole = self::storage()->where('id', $id)->where('guard_name', $guardName)->first();
 
-        if (! $concreteRole) {
-            throw RoleDoesNotExistException::withIdAndGuard($id, $guardName);
+        if ($concreteRole != null) {
+            return $concreteRole;
         }
 
-        return $concreteRole;
+        throw RoleDoesNotExistException::withIdAndGuard($id, $guardName);
     }
 
     public static function findByKey(string $key, string $guardName = null): Role
@@ -109,11 +107,11 @@ class Role extends Model
         /** @var Role $concreteRole */
         $concreteRole = self::storage()->where('key', $key)->where('guard_name', $guardName)->first();
 
-        if (! $concreteRole) {
-            throw RoleDoesNotExistException::withKeyAndGuard($key, $guardName);
+        if ($concreteRole != null) {
+            return $concreteRole;
         }
 
-        return $concreteRole;
+        throw RoleDoesNotExistException::withKeyAndGuard($key, $guardName);
     }
 
     public static function exists(string $key, string $guardName = null): bool
