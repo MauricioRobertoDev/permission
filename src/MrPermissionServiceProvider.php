@@ -20,8 +20,7 @@ class MrPermissionServiceProvider extends PackageServiceProvider
     public function configurePackage(Package $package): void
     {
         $package
-            ->name('permission')
-            ->hasConfigFile()
+            ->name('mr-permission')
             ->hasMigration('create_permission_table')
             ->hasCommand(PermissionCommand::class);
     }
@@ -34,8 +33,8 @@ class MrPermissionServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
-        Permission::observe(PermissionObserver::class);
         Role::observe(RoleObserver::class);
+        Permission::observe(PermissionObserver::class);
 
         app(Gate::class)->before(function (Authorizable $user, string $ability) {
             if (Permission::exists($ability) && method_exists($user, 'hasPermission')) {
@@ -45,6 +44,7 @@ class MrPermissionServiceProvider extends PackageServiceProvider
         });
 
         $router = app(Router::class);
+        $router->aliasMiddleware('role', \MrDev\Permission\Middleware\CheckRole::class);
         $router->aliasMiddleware('permission', \MrDev\Permission\Middleware\CheckPermission::class);
     }
 

@@ -51,6 +51,28 @@ trait HasRoles
         return $this->getRoles()->contains($concreteRole);
     }
 
+    public function hasAnyRole(array $roles): bool
+    {
+        foreach ($roles as $role) {
+            if ($this->hasRole($role)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function hasAllRoles(array $roles): bool
+    {
+        foreach ($roles as $role) {
+            if (! $this->hasRole($role)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function removeRole(Role|string|int $role, $guardName = null): void
     {
         $role = Role::getRole($role, $guardName ?? GuardHelper::getGuardNameFor(self::class));

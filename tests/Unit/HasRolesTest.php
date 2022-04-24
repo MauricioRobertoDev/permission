@@ -137,3 +137,35 @@ test('Deve esquecer o cache com as permissões do model', function () {
 
     expect(Cache::has($key1))->toBeFalse();
 });
+
+
+//  hasAnyRole(array $roles): bool
+test('Deve retornar se o model tem uma dentre as permissões passadas', function () {
+    $user = User::create(['email' => 'user@test.com']);
+
+    $p1 = Role::create(['key' => 'test-role-1']);
+    $p2 = Role::create(['key' => 'test-role-2']);
+    $p3 = Role::create(['key' => 'test-role-3']);
+
+    $user->addRole($p1);
+    $user->addRole($p2);
+
+    expect($user->hasAnyRole(['test-role-2']))->toBeTrue();
+    expect($user->hasAnyRole(['test-role-3']))->toBeFalse();
+});
+
+// hasAllRoles(array $roles): bool
+test('Deve retornar se o model tem todas as permissões passadas', function () {
+    $user = User::create(['email' => 'user@test.com']);
+
+    $r1 = Role::create(['key' => 'test-role-1']);
+    $r2 = Role::create(['key' => 'test-role-2']);
+    $r3 = Role::create(['key' => 'test-role-3']);
+
+    $user->addRole($r1);
+    $user->addRole($r2);
+
+    expect($user->hasAllRoles(['test-role-2']))->toBeTrue();
+    expect($user->hasAllRoles([$r1, $r2]))->toBeTrue();
+    expect($user->hasAllRoles(['test-role-2', $r3]))->toBeFalse();
+});

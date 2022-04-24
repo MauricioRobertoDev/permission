@@ -38,6 +38,25 @@ test('Deve retornar se o usuário tem ou não determinada permissão', function 
     expect(fn () => $role->hasPermission('permission-does-not-exist'))->toThrow(PermissionDoesNotExistException::class);
 });
 
+// hasPermission(string $permission): bool - ROLE
+test('Deve retornar se o usuário tem ou não determinada permissão mesmo que ela esteja em uma de suas roles', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $role = Role::create(['key' => 'role-test']);
+
+    $permission1 = Permission::create(['key' => 'test-permission-1']);
+    $permission2 = Permission::create(['key' => 'test-permission-2']);
+
+    $user->roles()->attach($role);
+    $role->permissions()->attach($permission1);
+
+    expect($user->permissions()->count())->toBe(0);
+    expect($user->hasPermission($permission1))->toBeTrue();
+    expect($user->hasPermission($permission1->id))->toBeTrue();
+    expect($user->hasPermission($permission1->key))->toBeTrue();
+    expect($user->hasPermission($permission2))->toBeFalse();
+    expect(fn () => $user->hasPermission('permission-does-not-exist'))->toThrow(PermissionDoesNotExistException::class);
+});
+
 // addPermission(string $permission): self
 test('Deve adicionar uma permissão para um usuário', function () {
     $user = User::query()->create(['email' => 'user@test.com']);
@@ -194,4 +213,71 @@ test('Deve esquecer o cache com as permissões do model', function () {
 
     expect(Cache::has($key1))->toBeFalse();
     expect(Cache::has($key2))->toBeFalse();
+});
+
+//  hasAnyPermission(array $permissions): bool
+test('Deve retornar se o model tem uma dentre as permissões passadas', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $role = Role::create(['key' => 'role-test']);
+
+    $p1 = Permission::create(['key' => 'test-permission-1']);
+    $p2 = Permission::create(['key' => 'test-permission-2']);
+    $p3 = Permission::create(['key' => 'test-permission-3']);
+
+    $user->addPermission($p1);
+    $user->addPermission($p2);
+
+    $role->addPermission($p1);
+    $role->addPermission($p2);
+
+    expect($user->hasAnyPermission(['test-permission-2']))->toBeTrue();
+    expect($user->hasAnyPermission(['test-permission-3']))->toBeFalse();
+
+    expect($role->hasAnyPermission(['test-permission-2']))->toBeTrue();
+    expect($role->hasAnyPermission(['test-permission-3']))->toBeFalse();
+});
+
+// hasAllPermissions(array $permissions): bool
+test('Deve retornar se o model tem todas as permissões passadas', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $role = Role::create(['key' => 'role-test']);
+
+    $p1 = Permission::create(['key' => 'test-permission-1']);
+    $p2 = Permission::create(['key' => 'test-permission-2']);
+    $p3 = Permission::create(['key' => 'test-permission-3']);
+
+    $user->addPermission($p1);
+    $user->addPermission($p2);
+
+    $role->addPermission($p1);
+    $role->addPermission($p2);
+
+    expect($user->hasAllPermissions(['test-permission-2']))->toBeTrue();
+    expect($user->hasAllPermissions([$p1, $p2]))->toBeTrue();
+    expect($user->hasAllPermissions(['test-permission-2', $p3]))->toBeFalse();
+
+    expect($role->hasAllPermissions(['test-permission-2']))->toBeTrue();
+    expect($role->hasAllPermissions([$p1, $p2]))->toBeTrue();
+    expect($role->hasAllPermissions(['test-permission-2', $p3]))->toBeFalse();
+});
+
+// hasPermissionThroughGroup(Permission|string|int $permission, $guardName = null): bool
+test('Deve retornar se o model tem determinada pemrissão em suas roles', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $role = Role::create(['key' => 'role-test']);
+
+    $p1 = Permission::create(['key' => 'test-permission-1']);
+    $p2 = Permission::create(['key' => 'test-permission-2']);
+
+    $user->addRole($role);
+    $user->addPermission($p2);
+
+    expect($user->hasPermissionThroughRole($p1))->toBeFalse();
+    expect($user->hasPermissionThroughRole($p2))->toBeFalse();
+
+    $role->addPermission($p1);
+    $role->addPermission($p2);
+
+    expect($user->hasPermissionThroughRole($p1))->toBeTrue();
+    expect($user->hasPermissionThroughRole($p2))->toBeTrue();
 });

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 use MrDev\Permission\Expections\GuardDoesNotExists;
 use MrDev\Permission\Expections\GuardDoesNotMatch;
-use MrDev\Permission\Expections\PermissionDoesNotExistException;
 use MrDev\Permission\Helpers\GuardHelper;
 use MrDev\Permission\Models\Permission;
 
@@ -25,7 +24,7 @@ trait HasPermissions
 
     public function addPermission(Permission|string|int $permission, string $guardName = null): void
     {
-        $guardName = $guardName ?? GuardHelper::getGuardNameFor(self::class);
+        $guardName = $guardName ?? GuardHelper::getGuardNameFor($this);
 
         $concretePermission = Permission::getPermissionOrFail($permission, $guardName);
 
@@ -38,15 +37,52 @@ trait HasPermissions
 
     public function hasPermission(Permission|string|int $permission, $guardName = null): bool
     {
-        $guardName = $guardName ?? GuardHelper::getGuardNameFor(self::class);
+        $guardName = $guardName ?? GuardHelper::getGuardNameFor($this);
 
-        $concretePermission = Permission::getPermission($permission, $guardName);
+        $concretePermission = Permission::getPermissionOrFail($permission, $guardName);
 
-        if (! $concretePermission) {
-            throw PermissionDoesNotExistException::create($permission, $guardName);
+        return $this->getPermissions()->contains($concretePermission) || $this->hasPermissionThroughRole($concretePermission);
+    }
+
+    public function hasAnyPermission(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
         }
 
-        return $this->getPermissions()->contains($concretePermission);
+        return false;
+    }
+
+    public function hasAllPermissions(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if (! $this->hasPermission($permission)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function hasPermissionThroughRole(Permission|string|int $permission, $guardName = null): bool
+    {
+        if (! method_exists($this, 'getRoles')) {
+            return false;
+        }
+
+        $guardName = $guardName ?? GuardHelper::getGuardNameFor($this);
+
+        $concretePermission = Permission::getPermissionOrFail($permission, $guardName);
+
+        foreach ($this->getRoles() as $role) {
+            if ($role->hasPermission($concretePermission)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function removePermission(Permission|string|int $permission, $guardName = null): void
