@@ -4,7 +4,6 @@ namespace MrDev\Permission\Middleware;
 
 use Closure;
 use MrDev\Permission\Expections\UnauthorizedException;
-use MrDev\Permission\Models\Permission;
 
 class CheckPermission
 {
@@ -23,11 +22,7 @@ class CheckPermission
             : explode('|', $permissions);
 
         foreach ($permissions as $permission) {
-            if (config('app.debug')) {
-                Permission::getPermissionOrFail($permission);
-            }
-
-            if ($authGuard->user()->can($permission)) {
+            if ($authGuard->user()->hasPermission($permission)) {
                 return $next($request);
             }
 

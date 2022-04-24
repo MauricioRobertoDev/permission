@@ -4,7 +4,6 @@ namespace MrDev\Permission\Middleware;
 
 use Closure;
 use MrDev\Permission\Expections\UnauthorizedException;
-use MrDev\Permission\Models\Role;
 
 class CheckRole
 {
@@ -23,10 +22,6 @@ class CheckRole
             : explode('|', $roles);
 
         foreach ($roles as $role) {
-            if (config('app.debug')) {
-                Role::getPermissionOrFail($role);
-            }
-
             if ($authGuard->user()->hasRole($role)) {
                 return $next($request);
             }
