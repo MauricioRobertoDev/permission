@@ -99,4 +99,4 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Licença
 
-Licença (MIT). Por favor veja [Licença](LICENSE.md) for more information.
+Licença (MIT). Por favor veja [Licença](LICENSE.md) para mais informações.
