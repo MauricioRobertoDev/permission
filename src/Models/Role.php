@@ -24,9 +24,15 @@ class Role extends Model
         'description',
     ];
 
-    public function permissions(): BelongsToMany
+    public function users(): BelongsToMany
     {
-        return $this->belongsToMany(Permission::class, 'role_has_permissions');
+        return $this->morphedByMany(
+            GuardHelper::getModelForGuard($this->attributes['guard_name']),
+            'model',
+            'model_has_permissions',
+            'permission_id',
+            'model_id',
+        );
     }
 
     public static function create(array $attributes = []): Role

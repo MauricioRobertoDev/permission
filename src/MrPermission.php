@@ -53,7 +53,7 @@ class MrPermission
         return collect([]);
     }
 
-    public function refreshPermissionsOf(Model $model): void
+    public function refreshPermissionStorageOf(Model $model): void
     {
         $key = 'permissions::of::' . $model::class . '::' . $model->getKey();
 

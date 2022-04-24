@@ -25,7 +25,7 @@ trait HasPermissions
 
     public function addPermission(Permission|string|int $permission, string $guardName = null): void
     {
-        $guardName = $guardName ?? $this->getGuardName();
+        $guardName = $guardName ?? GuardHelper::getGuardNameFor(self::class);
 
         $concretePermission = Permission::getPermissionOrFail($permission, $guardName);
 
@@ -38,7 +38,7 @@ trait HasPermissions
 
     public function hasPermission(Permission|string|int $permission, $guardName = null): bool
     {
-        $guardName = $guardName ?? $this->getGuardName();
+        $guardName = $guardName ?? GuardHelper::getGuardNameFor(self::class);
 
         $concretePermission = Permission::getPermission($permission, $guardName);
 
@@ -51,31 +51,11 @@ trait HasPermissions
 
     public function removePermission(Permission|string|int $permission, $guardName = null): void
     {
-        $permission = Permission::getPermission($permission, $guardName ?? $this->getGuardName());
+        $permission = Permission::getPermission($permission, $guardName ?? GuardHelper::getGuardNameFor(self::class));
 
         $this->permissions()->detach($permission);
 
         $this->refreshPermissions();
-    }
-
-    public function getPermissions(): Collection
-    {
-        return app('mr-permission')->getPermissionStorageOf($this);
-    }
-
-    public function refreshPermissions(): void
-    {
-        app('mr-permission')->refreshPermissionsOf($this);
-    }
-
-    protected function getGuardName(): string
-    {
-        return GuardHelper::getGuardNameFor($this);
-    }
-
-    protected function getPossibleGuards(): Collection
-    {
-        return GuardHelper::getPossibleGuards($this);
     }
 
     protected function ensureModelSharesGuard($groupOrPermission): void
@@ -84,8 +64,18 @@ trait HasPermissions
             throw GuardDoesNotExists::guardOfPermissionOrRole($groupOrPermission);
         }
 
-        if (! $this->getPossibleGuards()->contains($groupOrPermission->guard_name)) {
-            throw GuardDoesNotMatch::create($groupOrPermission->guard_name, $this->getPossibleGuards());
+        if (! GuardHelper::getPossibleGuards($this)->contains($groupOrPermission->guard_name)) {
+            throw GuardDoesNotMatch::create($groupOrPermission->guard_name, GuardHelper::getPossibleGuards($this));
         }
+    }
+
+    public function refreshPermissions(): void
+    {
+        app('mr-permission')->refreshPermissionStorageOf($this);
+    }
+
+    public function getPermissions(): Collection
+    {
+        return app('mr-permission')->getPermissionStorageOf($this);
     }
 }

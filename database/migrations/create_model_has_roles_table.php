@@ -7,15 +7,15 @@ use Illuminate\Support\Facades\Schema;
 return new class () extends Migration {
     public function up()
     {
-        Schema::create('model_has_permissions', function (Blueprint $table) {
+        Schema::create('model_has_roles', function (Blueprint $table) {
             $table->string('model_type');
             $table->unsignedBigInteger('model_id');
-            $table->foreignId('permission_id')->references('id')->on('permissions')->cascadeOnDelete();
+            $table->foreignId('role_id')->references('id')->on('roles')->cascadeOnDelete();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('model_has_permissions');
+        Schema::dropIfExists('model_has_roles');
     }
 };

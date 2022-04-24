@@ -82,11 +82,10 @@ class Permission extends Model
             return self::findById($permission, $guardName);
         }
 
-        if (! self::getAllPermissions()->contains($permission)) {
+        if (! self::storage()->contains($permission)) {
             throw PermissionDoesNotExistException::create($permission, $guardName);
         }
 
-        // $permission = self::findByKey($permission->key, $guardName);
         $permission = self::findByKey($permission->key, $permission->guard_name);
 
         return $permission;
