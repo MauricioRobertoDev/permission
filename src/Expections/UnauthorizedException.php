@@ -5,7 +5,7 @@ namespace MrDev\Permission\Expections;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class UnauthorizedException extends HttpException
+final class UnauthorizedException extends HttpException
 {
     protected array $requiredGroups = [];
     protected array $requiredPermissions = [];

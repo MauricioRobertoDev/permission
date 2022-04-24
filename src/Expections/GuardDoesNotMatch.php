@@ -5,7 +5,7 @@ namespace MrDev\Permission\Expections;
 use Exception;
 use Illuminate\Support\Collection;
 
-class GuardDoesNotMatch extends Exception
+final class GuardDoesNotMatch extends Exception
 {
     public static function create(string $givenGuard, Collection $expectedGuards)
     {

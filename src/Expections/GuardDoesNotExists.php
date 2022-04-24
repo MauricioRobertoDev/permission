@@ -6,7 +6,7 @@ use Exception;
 use MrDev\Permission\Models\Permission;
 use MrDev\Permission\Models\Role;
 
-class GuardDoesNotExists extends Exception
+final class GuardDoesNotExists extends Exception
 {
     public static function guardOfPermissionOrRole(Permission|Role $permissionOrRole): self
     {

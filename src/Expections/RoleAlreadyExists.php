@@ -4,7 +4,7 @@ namespace MrDev\Permission\Expections;
 
 use Exception;
 
-class RoleAlreadyExists extends Exception
+final class RoleAlreadyExists extends Exception
 {
     public static function withKeyAndGuard($key, $guardName)
     {
