@@ -45,8 +45,7 @@
     },
     "scripts": {
         "analyse": "vendor/bin/phpstan analyse",
-        "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/pest --coverage"
+        "test": "vendor/bin/pest"
     },
     "config": {
         "sort-packages": true,
@@ -59,10 +58,7 @@
         "laravel": {
             "providers": [
                 "MrDev\\Permission\\MrPermissionServiceProvider"
-            ],
-            "aliases": {
-                "Permission": "MrDev\\Permission\\Facades\\Permission"
-            }
+            ]
         }
     },
     "minimum-stability": "dev",

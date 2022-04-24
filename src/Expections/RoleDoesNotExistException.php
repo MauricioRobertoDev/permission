@@ -5,7 +5,7 @@ namespace MrDev\Permission\Expections;
 use Exception;
 use MrDev\Permission\Models\Role;
 
-class RoleDoesNotExistException extends Exception
+final class RoleDoesNotExistException extends Exception
 {
     public static function withIdAndGuard($id, $guardName): RoleDoesNotExistException
     {

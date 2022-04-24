@@ -82,13 +82,11 @@ class Permission extends Model
             return self::findById($permission, $guardName);
         }
 
-        if (! self::storage()->contains($permission)) {
-            throw PermissionDoesNotExistException::create($permission, $guardName);
+        if (self::storage()->contains($permission)) {
+            return self::findByKey($permission->key, $permission->guard_name);
         }
 
-        $permission = self::findByKey($permission->key, $permission->guard_name);
-
-        return $permission;
+        throw PermissionDoesNotExistException::create($permission, $guardName);
     }
 
     public static function findById(string $id, string $guardName = null): Permission
@@ -98,11 +96,11 @@ class Permission extends Model
         /** @var Permission $concretePermission */
         $concretePermission = self::storage()->where('id', $id)->where('guard_name', $guardName)->first();
 
-        if (! $concretePermission) {
-            throw PermissionDoesNotExistException::withIdAndGuard($id, $guardName);
+        if ($concretePermission != null) {
+            return $concretePermission;
         }
 
-        return $concretePermission;
+        throw PermissionDoesNotExistException::withIdAndGuard($id, $guardName);
     }
 
     public static function findByKey(string $key, string $guardName = null): Permission
@@ -112,11 +110,11 @@ class Permission extends Model
         /** @var Permission $concretePermission */
         $concretePermission = self::storage()->where('key', $key)->where('guard_name', $guardName)->first();
 
-        if (! $concretePermission) {
-            throw PermissionDoesNotExistException::withKeyAndGuard($key, $guardName);
+        if ($concretePermission != null) {
+            return $concretePermission;
         }
 
-        return $concretePermission;
+        throw PermissionDoesNotExistException::withKeyAndGuard($key, $guardName);
     }
 
     public static function exists(string $key, string $guardName = null): bool
