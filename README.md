@@ -91,9 +91,6 @@ $user->hasAllRoles(['role', 'outra role']);
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
-## Contribuindo
-
-Por favor veja [CONTRIBUINDO](https://github.com/spatie/.github/blob/main/CONTRIBUTING.md) para mais detalhes.
 
 ## Creditos
 
