@@ -169,3 +169,22 @@ test('Deve retornar se o model tem todas as permissões passadas', function () {
     expect($user->hasAllRoles([$r1, $r2]))->toBeTrue();
     expect($user->hasAllRoles(['test-role-2', $r3]))->toBeFalse();
 });
+
+test('Ao excluir um model que tem hasRoles deve excluir o seu cache com roles', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $r = Role::create(['key' => 'role-test']);
+
+    $user->addRole($r);
+
+    $key = 'roles::of::' . $user::class . '::' . $user->getKey();
+
+    expect(Cache::has($key))->toBeFalse();
+
+    $user->getRoles();
+
+    expect(Cache::has($key))->toBeTrue();
+
+    $user->delete();
+
+    expect(Cache::has($key))->toBeFalse();
+});

@@ -281,3 +281,30 @@ test('Deve retornar se o model tem determinada pemrissão em suas roles', functi
     expect($user->hasPermissionThroughRole($p1))->toBeTrue();
     expect($user->hasPermissionThroughRole($p2))->toBeTrue();
 });
+
+test('Ao deletar um model que tem permissões seu cache deve ser apagado', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $role = Role::create(['key' => 'role-test']);
+    $p = Permission::create(['key' => 'test-permission']);
+
+    $user->addPermission($p);
+    $role->addPermission($p);
+
+    $key1 = 'permissions::of::' . $user::class . '::' . $user->getKey();
+    $key2 = 'permissions::of::' . $role::class . '::' . $role->getKey();
+
+    expect(Cache::has($key1))->toBeFalse();
+    expect(Cache::has($key2))->toBeFalse();
+
+    $user->getPermissions();
+    $role->getPermissions();
+
+    expect(Cache::has($key1))->toBeTrue();
+    expect(Cache::has($key2))->toBeTrue();
+
+    $user->delete();
+    $role->delete();
+
+    expect(Cache::has($key1))->toBeFalse();
+    expect(Cache::has($key2))->toBeFalse();
+});

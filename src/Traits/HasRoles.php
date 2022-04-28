@@ -25,6 +25,18 @@ trait HasRoles
         );
     }
 
+    public static function bootHasRoles()
+    {
+        static::deleting(function ($model) {
+            if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
+                return;
+            }
+
+            $model->roles()->detach();
+            $model->refreshRoles();
+        });
+    }
+
     public function addRole(Role|string|int $role, string $guardName = null): void
     {
         $guardName = $guardName ?? GuardHelper::getGuardNameFor(self::class);
