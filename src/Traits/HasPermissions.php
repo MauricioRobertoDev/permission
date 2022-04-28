@@ -22,6 +22,18 @@ trait HasPermissions
         );
     }
 
+    public static function bootHasPermissions(): void
+    {
+        static::deleting(function ($model) {
+            if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
+                return;
+            }
+
+            $model->permissions()->detach();
+            $model->refreshPermissions();
+        });
+    }
+
     public function addPermission(Permission|string|int $permission, string $guardName = null): void
     {
         $guardName = $guardName ?? GuardHelper::getGuardNameFor($this);
@@ -113,5 +125,10 @@ trait HasPermissions
     public function getPermissions(): Collection
     {
         return app('mr-permission')->getPermissionStorageOf($this);
+    }
+
+    public function listPermissions(): array
+    {
+        return $this->getPermissions()->pluck('key')->toArray();
     }
 }

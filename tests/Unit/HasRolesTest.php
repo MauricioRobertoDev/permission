@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Cache;
 use MrDev\Permission\Expections\GuardDoesNotExists;
 use MrDev\Permission\Expections\GuardDoesNotMatch;
 use MrDev\Permission\Expections\RoleDoesNotExistException;
+use MrDev\Permission\Models\Permission;
 use MrDev\Permission\Models\Role;
 use MrDev\Permission\Tests\User;
 
@@ -168,4 +169,72 @@ test('Deve retornar se o model tem todas as permissões passadas', function () {
     expect($user->hasAllRoles(['test-role-2']))->toBeTrue();
     expect($user->hasAllRoles([$r1, $r2]))->toBeTrue();
     expect($user->hasAllRoles(['test-role-2', $r3]))->toBeFalse();
+});
+
+// public static function bootHasRoles()
+test('Ao excluir um model que tem hasRoles deve excluir o seu cache com roles', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $r = Role::create(['key' => 'role-test']);
+
+    $user->addRole($r);
+
+    $key = 'roles::of::' . $user::class . '::' . $user->getKey();
+
+    expect(Cache::has($key))->toBeFalse();
+
+    $user->getRoles();
+
+    expect(Cache::has($key))->toBeTrue();
+
+    $user->delete();
+
+    expect(Cache::has($key))->toBeFalse();
+});
+
+// public function listPermissionsByRoles(): array
+test('Deve retorna uma lsita com a key de todas permissões de um model contida em suas roles', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $r = Role::create(['key' => 'role-test']);
+    $pu = Permission::create(['key' => 'permission-in-user']);
+    $pr = Permission::create(['key' => 'permission-in-role']);
+
+    $user->addPermission($pu);
+
+    expect($user->listPermissionsByRoles())->toBe([]);
+
+    $r->addPermission($pr);
+    $user->addRole($r);
+
+    expect($user->listPermissionsByRoles())->toBe([ 'permission-in-role']);
+});
+
+//  public function listPermissions(bool $withRoles = false): array
+test('Deve retornar uma lista com a key de todas permissões do model incluindo as permissões contidas em suas roles', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $r = Role::create(['key' => 'role-test']);
+    $pu = Permission::create(['key' => 'permission-in-user']);
+    $pr = Permission::create(['key' => 'permission-in-role']);
+
+    $user->addPermission($pu);
+
+    expect($user->listPermissions(true))->toBe(['permission-in-user']);
+
+    $r->addPermission($pr);
+    $user->addRole($r);
+
+    expect($user->listPermissions(true))->toBe(['permission-in-user', 'permission-in-role']);
+});
+
+test('Deve retornar uma lista com a key de todas as roles do model', function () {
+    $user = User::create(['email' => 'user@test.com']);
+    $r1 = Role::create(['key' => 'role-test-1']);
+    $r2 = Role::create(['key' => 'role-test-2']);
+
+    $user->addRole($r1);
+
+    expect($user->listRoles())->toBe(['role-test-1']);
+
+    $user->addRole($r2);
+
+    expect($user->listRoles())->toBe(['role-test-1', 'role-test-2']);
 });

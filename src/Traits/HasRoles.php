@@ -25,6 +25,18 @@ trait HasRoles
         );
     }
 
+    public static function bootHasRoles()
+    {
+        static::deleting(function ($model) {
+            if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
+                return;
+            }
+
+            $model->roles()->detach();
+            $model->refreshRoles();
+        });
+    }
+
     public function addRole(Role|string|int $role, string $guardName = null): void
     {
         $guardName = $guardName ?? GuardHelper::getGuardNameFor(self::class);
@@ -101,5 +113,32 @@ trait HasRoles
     public function getRoles(): Collection
     {
         return app('mr-permission')->getRoleStorageOf($this);
+    }
+
+    public function listPermissions(bool $withRoles = false): array
+    {
+        $permissions = $this->getPermissions()->pluck('key')->toArray();
+
+        if ($withRoles) {
+            $permissions = array_merge($permissions, $this->listPermissionsByRoles());
+        }
+
+        return $permissions;
+    }
+
+    public function listPermissionsByRoles(): array
+    {
+        $permissions = [];
+
+        foreach ($this->getRoles() as $role) {
+            $permissions = array_merge($permissions, $role->listPermissions());
+        }
+
+        return $permissions;
+    }
+
+    public function listRoles(): array
+    {
+        return $this->getRoles()->pluck('key')->toArray();
     }
 }
