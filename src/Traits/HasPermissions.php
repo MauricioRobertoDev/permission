@@ -22,7 +22,7 @@ trait HasPermissions
         );
     }
 
-    public static function bootHasPermissions()
+    public static function bootHasPermissions(): void
     {
         static::deleting(function ($model) {
             if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
@@ -125,5 +125,10 @@ trait HasPermissions
     public function getPermissions(): Collection
     {
         return app('mr-permission')->getPermissionStorageOf($this);
+    }
+
+    public function listPermissions(): array
+    {
+        return $this->getPermissions()->pluck('key')->toArray();
     }
 }

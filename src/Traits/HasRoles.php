@@ -114,4 +114,31 @@ trait HasRoles
     {
         return app('mr-permission')->getRoleStorageOf($this);
     }
+
+    public function listPermissions(bool $withRoles = false): array
+    {
+        $permissions = $this->getPermissions()->pluck('key')->toArray();
+
+        if ($withRoles) {
+            $permissions = array_merge($permissions, $this->listPermissionsByRoles());
+        }
+
+        return $permissions;
+    }
+
+    public function listPermissionsByRoles(): array
+    {
+        $permissions = [];
+
+        foreach ($this->getRoles() as $role) {
+            $permissions = array_merge($permissions, $role->listPermissions());
+        }
+
+        return $permissions;
+    }
+
+    public function listRoles(): array
+    {
+        return $this->getRoles()->pluck('key')->toArray();
+    }
 }
