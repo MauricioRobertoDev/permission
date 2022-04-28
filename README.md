@@ -77,7 +77,7 @@ $user->addRole('role');
 // OU
 $user->addRole($role->id);
 
-Todos os Contribuintes
+
 // CHECANDO
 
 $user->hasRole('role');
@@ -91,9 +91,6 @@ $user->hasAllRoles(['role', 'outra role']);
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
-## Contribuindo
-
-Por favor veja [CONTRIBUINDO](https://github.com/spatie/.github/blob/main/CONTRIBUTING.md) para mais detalhes.
 
 ## Creditos
 
@@ -102,4 +99,4 @@ Por favor veja [CONTRIBUINDO](https://github.com/spatie/.github/blob/main/CONTRI
 
 ## Licença
 
-Licença (MIT). Por favor veja [Licença](LICENSE.md) for more information.
+Licença (MIT). Por favor veja [Licença](LICENSE.md) para mais informações.
