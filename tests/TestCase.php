@@ -49,16 +49,7 @@ class TestCase extends Orchestra
             $table->string('email');
         });
 
-        $migration = include __DIR__ . '/../database/migrations/create_permissions_table.php';
-        $migration->up();
-
-        $migration = include __DIR__ . '/../database/migrations/create_model_has_permissions_table.php';
-        $migration->up();
-
-        $migration = include __DIR__ . '/../database/migrations/create_roles_table.php';
-        $migration->up();
-
-        $migration = include __DIR__ . '/../database/migrations/create_model_has_roles_table.php';
+        $migration = include __DIR__ . '/../database/migrations/create_permission_tables.php';
         $migration->up();
     }
 }
