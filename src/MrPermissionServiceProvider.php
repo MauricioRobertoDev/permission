@@ -21,7 +21,7 @@ class MrPermissionServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('permission')
-            ->hasMigration('create_permission_table')
+            ->hasMigration('create_permission_tables')
             ->hasCommand(PermissionCommand::class);
     }
 
